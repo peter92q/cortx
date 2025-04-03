@@ -1,0 +1,430 @@
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { Typewriter } from "react-simple-typewriter";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
+import Separator from "../assets/Separator";
+import Grid from "../assets/Grid";
+
+const TokenDistribution = () => {
+  const [activeTab, setActiveTab] = useState("allocation");
+  const [hoveredSlice, setHoveredSlice] = useState<number | null>(null);
+
+  const allocation: AllocationData[] = [
+    {
+      name: "Ecosystem",
+      value: 40,
+      color: "#FF2A6D",
+      details:
+        "Funds for platform development, partnerships, community incentives, and ecosystem grants",
+    },
+    {
+      name: "Team",
+      value: 20,
+      color: "#05D9E8",
+      details:
+        "Compensation for core team, hiring experts, and team expansion (engineering, marketing, operations)",
+    },
+    {
+      name: "Investors",
+      value: 25,
+      color: "#D300C5",
+      details:
+        "Early backers and strategic partners with vesting schedule over 36 months",
+    },
+    {
+      name: "Reserve",
+      value: 15,
+      color: "#00FECA",
+      details:
+        "Treasury for future opportunities, liquidity provisions, and unexpected expenses",
+    },
+  ];
+
+  const unlockSchedule: UnlockSchedule[] = [
+    { month: 6, release: 10 },
+    { month: 12, release: 15 },
+    { month: 18, release: 20 },
+    { month: 24, release: 25 },
+    { month: 36, release: 30 },
+  ];
+  // Process vesting data
+  const vestingData = unlockSchedule.map((point, i) => ({
+    ...point,
+    cumulative: unlockSchedule
+      .slice(0, i + 1)
+      .reduce((sum, x) => sum + x.release, 0),
+  }));
+
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+
+      return (
+        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-xl">
+          <div className="flex items-center mb-2">
+            <div
+              className="w-3 h-3 rounded-full mr-2"
+              style={{ backgroundColor: data.color }}
+            />
+            <p className="font-bold text-white">{data.name}</p>
+            <p className="ml-auto font-bold text-white">{data.value}%</p>
+          </div>
+          <p className="text-gray-300 text-sm mb-2">{data.details}</p>
+          {data.name === "Investors" && (
+            <div className="mt-2 pt-2 border-t border-gray-700">
+              <p className="text-xs text-gray-400 mb-1">Vesting Schedule:</p>
+              <ul className="text-xs text-gray-300 space-y-1">
+                {unlockSchedule.map((item, index) => (
+                  <li key={index}>
+                    {item.month} months: {item.release}% release
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <section className="py-16 px-4 z-50 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
+      <Separator />
+      <Grid className="absolute" />
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-white mb-3">
+          <span className="text-gray-100 text-3xl font-bold">
+            <p className="text-yellow-700 inline">Token</p> Economics
+          </span>
+        </h2>
+        <Typewriter
+          words={[
+            "Transparent and sustainable token distribution model designed for long-term growth",
+          ]}
+          cursor
+          cursorStyle="_"
+          typeSpeed={70}
+          delaySpeed={300}
+        />
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex justify-center mb-8">
+        <div className="relative p-1 border border-gray-100/10 bg-black">
+          <div className="inline-flex relative">
+            {/* Animated background for active tab */}
+            <div
+              className={`absolute h-[85%] top-1/2 -translate-y-1/2 bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-700 transition-all duration-300 ease-out ${
+                activeTab === "allocation"
+                  ? "left-[4px] w-[90px]"
+                  : activeTab === "vesting"
+                  ? "left-[102px] w-[125px]"
+                  : "left-[245px] w-[95px]"
+              }`}
+            />
+
+            <button
+              onClick={() => setActiveTab("allocation")}
+              className={`relative z-10 px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                activeTab === "allocation"
+                  ? "text-white font-semibold"
+                  : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+              }`}
+            >
+              Allocation
+            </button>
+            <button
+              onClick={() => setActiveTab("vesting")}
+              className={`relative z-10 px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                activeTab === "vesting"
+                  ? "text-white font-semibold"
+                  : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+              }`}
+            >
+              Vesting Schedule
+            </button>
+            <button
+              onClick={() => setActiveTab("utility")}
+              className={`relative z-10 px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                activeTab === "utility"
+                  ? "text-white font-semibold"
+                  : "text-gray-300 hover:text-white hover:bg-gray-700/50"
+              }`}
+            >
+              Token Utility
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-30% 0px -10% 0px" }}
+        variants={{
+          hidden: {
+            opacity: 0,
+            scaleX: 0,
+            transformOrigin: "left center",
+          },
+          visible: {
+            opacity: 1,
+            scaleX: 1,
+            transition: {
+              duration: 0.9,
+              ease: [0.32, 0, 0.67, 0],
+              when: "beforeChildren",
+              staggerChildren: 0.15,
+            },
+          },
+        }}
+        className=" p-6 md:p-8 border-b-yellow-700 border-b-[5px] overflow-hidden"
+      >
+        {activeTab === "allocation" && (
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Pie Chart */}
+            <div className="h-96 md:h-[30rem]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={allocation}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={110}
+                    paddingAngle={2}
+                    dataKey="value"
+                    onMouseEnter={(_, index) => setHoveredSlice(index)}
+                    onMouseLeave={() => setHoveredSlice(null)}
+                  >
+                    {allocation.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color}
+                        stroke="none"
+                        opacity={
+                          hoveredSlice === null || hoveredSlice === index
+                            ? 1
+                            : 0.5
+                        }
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Legend & Details */}
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-6">
+                Token Allocation
+              </h3>
+              <div className="space-y-4">
+                {allocation.map((item, index) => (
+                  <div
+                    key={item.name}
+                    className="flex items-center justify-between p-3 rounded-lg transition-all"
+                    style={{
+                      backgroundColor:
+                        hoveredSlice === index
+                          ? `${item.color}20`
+                          : "transparent",
+                      border: `1px solid ${
+                        hoveredSlice === index ? item.color : "transparent"
+                      }`,
+                    }}
+                    onMouseEnter={() => setHoveredSlice(index)}
+                    onMouseLeave={() => setHoveredSlice(null)}
+                  >
+                    <div className="flex items-center">
+                      <div
+                        className="w-4 h-4 rounded-full mr-3"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-gray-300">{item.name}</span>
+                    </div>
+                    <span className="font-medium text-white">
+                      {item.value}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <h4 className="text-sm font-semibold text-cyan-400 mb-2">
+                  TOTAL SUPPLY
+                </h4>
+                <p className="text-2xl font-bold text-white">
+                  1,000,000,000{" "}
+                  <span className="text-gray-400 text-lg">CORTX</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "vesting" && (
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Vesting Chart */}
+            <div className="h-80 md:h-96">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={vestingData}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2D3748" />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fill: "#A0AEC0" }}
+                    label={{
+                      value: "Months",
+                      position: "insideBottomRight",
+                      fill: "#A0AEC0",
+                    }}
+                  />
+                  <YAxis
+                    tick={{ fill: "#A0AEC0" }}
+                    label={{
+                      value: "% Released",
+                      angle: -90,
+                      position: "insideLeft",
+                      fill: "#A0AEC0",
+                    }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: "#1A202C",
+                      borderColor: "#4A5568",
+                      borderRadius: "0.5rem",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="cumulative"
+                    stroke="#05D9E8"
+                    fill="url(#colorGradient)"
+                    fillOpacity={0.8}
+                  />
+                  <defs>
+                    <linearGradient
+                      id="colorGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#05D9E8" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#05D9E8" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Vesting Details */}
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-6">
+                Vesting Schedule
+              </h3>
+              <div className="space-y-4 mb-6">
+                {unlockSchedule.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-3 bg-gray-800/30 rounded-lg"
+                  >
+                    <div>
+                      <span className="text-white font-medium">
+                        Month {item.month}
+                      </span>
+                      <span className="text-gray-400 text-sm block">
+                        +{item.release}% release
+                      </span>
+                    </div>
+                    <span className="text-cyan-400 font-bold">
+                      {vestingData[index].cumulative}% cumulative
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <h4 className="text-sm font-semibold text-purple-400 mb-1">
+                  CLIFF PERIOD
+                </h4>
+                <p className="text-white">6 months initial cliff</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "utility" && (
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                title: "Governance",
+                icon: "🗳️",
+                description: "Vote on protocol upgrades and parameter changes",
+                color: "#FF2A6D",
+              },
+              {
+                title: "Staking",
+                icon: "🔒",
+                description: "Secure the network and earn staking rewards",
+                color: "#05D9E8",
+              },
+              {
+                title: "Fee Payment",
+                icon: "⛽",
+                description:
+                  "Pay for transaction fees and smart contract execution",
+                color: "#D300C5",
+              },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="p-6 rounded-xl border border-gray-800 hover:border-gray-700 transition-all bg-gradient-to-b from-gray-900/50 to-gray-900/0"
+              >
+                <div
+                  className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl mb-4"
+                  style={{
+                    backgroundColor: `${item.color}20`,
+                    border: `1px solid ${item.color}`,
+                  }}
+                >
+                  {item.icon}
+                </div>
+                <h4 className="text-lg font-semibold text-white mb-2">
+                  {item.title}
+                </h4>
+                <p className="text-gray-400">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </motion.div>
+    </section>
+  );
+};
+
+export default TokenDistribution;
+
+interface AllocationData {
+  name: string;
+  value: number;
+  color: string;
+  details: string;
+}
+
+interface UnlockSchedule {
+  month: number;
+  release: number;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: {
+    payload: AllocationData;
+  }[];
+}
